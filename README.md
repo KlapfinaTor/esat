@@ -53,8 +53,8 @@ Run pip3 in the "./src/python/" directory to install the required python depende
 
 Edit the ``esat-config.ini``:
 
-Fill the "EchoMACAddress" and "WLANInterfaceName" with your values. Add the AWS keys if you intend to use the automatic
-generation of sample audio files.
+Enter the corresponding values for your setup in "EchoMACAddress" and "ETHInterface". Add the AWS keys if you intend to
+use the automatic generation of audio sample files.
 
 ```ini
 [BASIC]
@@ -73,33 +73,126 @@ Setup is done.
 
 ## Using the tool
 
-The general workflow of the tool consists of 4 steps:
+The general workflow of the tool consists of 3 steps:
 
-1. Setup
-2. Capture data
-3. Train models based on the captured data
-4. Analyse pcap files
+1. Capture data
+2. Train models based on the captured data
+3. Classify pcap files
 
-In the following a full example with all steps is given.
+Quick overview about the tool usage:
 
-### Setup
+```bash
+sudo python3 esat-capture-data.py -file test-capture01  # capture a single alexa interaction and save it to the file test-capture01
+sudo python3 esat-automatic-capture.py                  # Starts the automatic alexa interaction and capture process.
+sudo python3 esat-analyze-data.py -file ./caps/test-capture01.pcap # Classify a single pcap file based on the trained models.
+sudo python3 esat-validate-helper.py                    # Generate additional reports the the gathered data
+```
+
+The following section describes the 3 parts of the toolset in more detail.
 
 ### Capture Data
 
-Switch to the "./src/python" directory.
+The capture process can be initiated in two ways. Individual network captures can be captured using the
+[esat-capture-data](./src/python/esat-capture-data.py) tool. The following shows a snippet of the command line after
+starting the capture-data tool.
 
 ```bash
-# cd ./src/python/
-# sudo python3 esat-capture-data.py
+stefan@stefan-PowerEdge-T30:~/esat$ sudo python3 esat-capture-data.py -file test-capture01
+    ___________ ___  ______            ______            __
+   / ____/ ___//   |/_  __/           / ____/___ _____  / /___  __________
+  / __/  \__ \/ /| | / /    ______   / /   / __ `/ __ \/ __/ / / / ___/ _ \
+ / /___ ___/ / ___ |/ /    /_____/  / /___/ /_/ / /_/ / /_/ /_/ / /  /  __/
+/_____//____/_/  |_/_/              \____/\__,_/ .___/\__/\__,_/_/   \___/
+                                              /_/
+
+Echo Speech Analysis Toolkit - Capture, Version 1.0
+
+  [-] Echo Mac Address: ff:ff:ff:ff:ff:ff
+  [-] Capture started on: 2021-08-25 22:51:58.911647
+  [-] To stop the capture press 'CTRL+C'
+
+Capturing on 'enp6s0'
+File: ./caps/test-capture01_00001_20210825225158.pcap
+Packets captured: 0
+Packets received/dropped on interface 'enp6s0': 0/0 (pcap:0/dumpcap:0/flushed:0/ps_ifdrop:0) (0.0%)
+Capture aborted!
 ```
 
-Enter a filename for the capture to start the capture process. This will capture all network packages that pass the
-interface you specified prior in the esat-config.ini.
+To automatically initiate Alexa interactions over a loudspeaker and to capture the resulting network traffic, the
+[esat-automatic-capture](./src/python/esat-automatic-capture.py) tool is used. This generates a total of 3 voice samples
+for each query defined in the voice_commands.csv. These samples are then played via a connected loudspeaker in order to
+start an Alexa interaction. The following shows a snippet of the command line after starting the automatic-capture tool.
 
-The capture process is aborted with: ``CTRL+C``
+```bash
+[+] Generate voices finished!
+Doing iteration [0 / 1]
+[+] Starting automatic capture!
+[*] Directory: 47
+   Starting capture for file: ./trainings_data/47/47_multi_info_Vicki_wer_ist_der_hauptdarsteller_in_titanic.mp3 with duration: 21 sec
+
+  [-] Capture started on: 2021-08-25 22:50:07.496417
+Capturing on 'enp6s0'
+File: ./trainings_data/47/47_multi_info_Vicki_wer_ist_der_hauptdarsteller_in_titanic_00001_20210825225007.pcap
+Playing audio: ./trainings_data/47/47_multi_info_Vicki_wer_ist_der_hauptdarsteller_in_titanic.mp3
+```
+
+The capture process for both tools can be aborted with: ``CTRL+C``
 
 ### Train Model
 
-TODO
+After capturing the desired number of samples, the random forest model can be trained. In the course of this work, 9
+different random forest models were generated. At the end of the training step, classifcation reports, confusion
+matrices are generated for each model and saved to the file system under "./reports/" In addition, during the training of
+the models, a classifcation report is output in the console.
 
-### Analyse pcap files
+```bash
+Classification Report:
+               precision    recall  f1-score   support
+
+         fun       0.80      0.77      0.78       424
+        info       0.85      0.93      0.89      1106
+       music       1.00      1.00      1.00       289
+        news       0.82      0.60      0.69       212
+        time       0.82      0.83      0.83       228
+     weather       0.82      0.77      0.79       503
+
+    accuracy                           0.85      2762
+   macro avg       0.85      0.82      0.83      2762
+weighted avg       0.85      0.85      0.85      2762
+
+Cross Validation: 0.64
+Accuracy: 0.8490224475018103
+```
+
+### Classify PCAP Files
+
+To classify a single captured pcap file based on the previously trained models, it is simply passed via command line
+argument. At the end of the analysis, a table is printed that contains the results of the classification. In addition, a
+csv report is saved in the root directory of the esat. The following shows a snippet from the console for the classification of an single pcap file.
+
+```bash
+stefan@stefan-PowerEdge-T30:~/esat$ sudo python3 esat-analyze-data.py -file ./caps/info-lugner_00001_20210630105152.pcap
+    ___________ ___  ______            ___                __
+   / ____/ ___//   |/_  __/           /   |  ____  ____ _/ /_  ______  ___
+  / __/  \__ \/ /| | / /    ______   / /| | / __ \/ __ `/ / / / /_  / / _ \
+ / /___ ___/ / ___ |/ /    /_____/  / ___ |/ / / / /_/ / / /_/ / / /_/  __/
+/_____//____/_/  |_/_/             /_/  |_/_/ /_/\__,_/_/\__, / /___/\___/
+                                                        /____/
+
+Echo Speech Analysis Toolkit - Analyze Data, Version 1.0
+Started analysis on: 2021-08-25 23:26:26.188691
+---------------------------------------------------------------------------------------------------------------------------
+Starting classification...
+ [-] File:     './caps/info-lugner_00001_20210630105152.pcap'
+ [-] Echo Mac: ff:ff:ff:ff:ff:ff
++----------------------------------------------+----------+-------------+-------------+---------------+------------------+------------------+----------------+-------------------+-------------------+
+| File                                         |   ID All |   ID A Only |   ID B Only | Speaker All   | Speaker A Only   | Speaker B Only   | Category All   | Category A Only   | Category B Only   |
+|----------------------------------------------+----------+-------------+-------------+---------------+------------------+------------------+----------------+-------------------+-------------------|
+| ./caps/info-lugner_00001_20210630105152.pcap |       15 |          15 |          11 | Hans          | Hans             | Hans             | info           | weather           | info              |
++----------------------------------------------+----------+-------------+-------------+---------------+------------------+------------------+----------------+-------------------+-------------------+
+Analysis of file is finished!
+
+
+Analysis finished. Closing Program!
+Finished analysis on: 2021-08-25 23:26:30.774590
+```
