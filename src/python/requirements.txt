@@ -1,0 +1,11 @@
+pyfiglet
+scapy
+nfstream
+sklearn
+prettytable
+matplotlib
+boto3
+mutagen
+gTTS
+tabulate
+seaborn

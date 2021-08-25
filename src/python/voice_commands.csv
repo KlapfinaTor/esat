@@ -1,0 +1,51 @@
+ID;Type;Category;Query
+1;time;weather;wie wird das wetter heute
+2;time;weather;wetterbericht heute
+3;single;info;wer ist Joe Biden
+4;multi;fun;erzaehle mir einen Witz
+5;single;info;wer ist Donald Trump
+6;single;info;wer ist Sebastian Kurz
+7;single;info;wer ist Elon Musk
+8;single;info;wer ist Angela Merkel
+9;single;info;wer ist Alexander Wurz
+10;single;info;wer ist Max Verstappen
+11;single;info;wer ist Richard Lugner
+12;single;music;spiel Deutschland von Rammstein
+13;single;info;erzaehl mir ueber die Stadt Graz
+14;time;weather;wie ist das Wetter
+15;time;weather;wird es morgen regnen
+16;time;weather;was ist die erweiterte Vorhersage fuer Graz
+17;time;weather;wie wird das Wetter in Graz an diesem Wochenende
+18;time;weather;muss ich heute einen Schirm mitnehmen
+19;time;weather;wird es am Montag schneien
+20;time;weather;wird es am Dienstag sonnig
+21;time;info;welche Kalenderwoche haben wir
+22;time;info;welcher Wochentag ist Heiligabend
+23;single;info;wie lange muss ich Eier kochen
+24;single;info;wie heist die Hauptstadt von Neuseeland
+25;single;info;wann beginnt die Winterzeit
+26;single;info;was heisst Saugroboter auf Englisch
+27;time;news;sag mir die Lottozahlen
+28;time;news;wie steht der Aktienkurs von Siemens
+29;time;news;wie steht der Bitcoin Kurs
+30;time;news;wurde der urojackpot geknackt
+31;time;time;wie ist die Uhrzeit
+32;time;time;wie spaet ist es
+33;time;time;uhrzeit
+34;time;time;wie spaet ist es in new york
+35;time;info;guten morgen
+36;multi;fun;wirf eine muenze
+37;multi;fun;nenne mir ein palindrome
+38;single;music;spiel Hey jude von den Beatles
+39;single;music;spiel fear of the dark von iron maiden
+40;multi;music;spiel nirvana
+41;multi;music;spiel slayer
+42;multi;info;gib mir einen life hack
+43;single;info;buchstabiere mir wasserfall
+44;multi;fun;erzaehle mir einen kaffee witz
+45;multi;fun;piratenwitz
+46;time;fun;wie alt bist du
+47;multi;info;wer ist der hauptdarsteller in titanic
+48;single;fun;was ist das laengste wort
+49;single;info;lebensmittel in der naehe
+50;multi;fun;nimm eine zufallszahl
