@@ -46,7 +46,7 @@ def render_welcome():
     """Prints the welcome screen"""
     f = Figlet(font='slant')
     print(f.renderText('ESAT - Analyze'))
-    print("Echo Speech Analysis Toolkit - Analyze Data, Version 1.0")
+    print("Echo Speech Analysis Toolkit - Analyze Data, Version {}".format(config.version))
 
 
 def predict(file_path, model, feature):
