@@ -1,5 +1,12 @@
 __author__ = "Stefan Klapf"
 
+"""
+------------------------------------------------------------------------------------------------------------------------
+esat-automatic-capture.py
+Automatically generates audio samples for each line provided in the voice_commands.csv,
+ plays them over a loudspeaker and captures the corresponding network traffic
+------------------------------------------------------------------------------------------------------------------------
+"""
 import argparse
 import datetime
 import os
@@ -9,8 +16,12 @@ import time
 from pathlib import Path
 
 import boto3 as boto3
+import matplotlib
 import pandas
 from mutagen.mp3 import MP3
+
+matplotlib.use('Agg')  # Dependency for pyfiglet, must be called before importing pyfiglet.
+from pyfiglet import Figlet
 
 from utils.esatconfig import EsatConfig
 
@@ -30,6 +41,11 @@ args = parser.parse_args()
 
 
 def generate_voice_commands_aws_polly(talker_voice_id, engine):
+    """ Generates voice samples for each line present in the voice_commands.csv
+            :talker_voice_id The identifier of the voice that gets used
+            :engine The engine to use for polly
+            :return: None
+    """
     print("[+] Starting to generate voices!")
     try:
         df = pandas.read_csv(VOICE_CSV, sep=";", skipinitialspace=True)
@@ -54,6 +70,13 @@ def generate_voice_commands_aws_polly(talker_voice_id, engine):
 
 
 def generate_save_mp3_polly(file_name, talker_voice_id, engine, text_to_read):
+    """ Generates voice samples for the text provided
+        :file_name Filename the audio sample get saved to
+        :talker_voice_id The identifier of the voice that gets used
+        :engine The engine to use for polly
+        :text_to_read Text that gets read
+        :return: None
+    """
     try:
         if not os.path.exists(file_name):
             polly_client = boto3.client('polly',
@@ -77,6 +100,11 @@ def generate_save_mp3_polly(file_name, talker_voice_id, engine, text_to_read):
 
 
 def generate_stop_aws_polly(talker_voice_id, engine):
+    """ Generates a single stop audio sample with the voice vicki
+                :talker_voice_id The identifier of the voice that gets used
+                :engine The engine to use for polly
+                :return: None
+        """
     try:
         text_to_read = '<speak> {}, <break time="1s"/> stop <break time="2s"/> </speak>'.format(DEFAULT_WAKE_WORD)
         file_name = "{}{}/{}_Stop.mp3".format(TRAINING_DATA_DIR, "0", talker_voice_id)
@@ -90,6 +118,10 @@ def generate_stop_aws_polly(talker_voice_id, engine):
 
 
 def get_length_of_mp3(full_path):
+    """ Returns the length of an mp3 file in seconds
+        :full_path The path of the audio file
+        :return: int Seconds
+    """
     try:
         audio = MP3(full_path)
         audio_info = audio.info
@@ -102,6 +134,11 @@ def get_length_of_mp3(full_path):
 
 
 def automatic_capture(talker_name):
+    """ Start the automatic capture process.
+        Each audio file found under the talker name in the directory's(class labels) will be played via loudspeakrs and the corresponding network traffic will be recored.
+        :talker_name The name of the talker of the mp3 file
+        :return: none
+    """
     print("[+] Starting automatic capture!")
     try:
         for directory in os.listdir(TRAINING_DATA_DIR):
@@ -153,7 +190,14 @@ def automatic_capture(talker_name):
         proc_capture.send_signal(SIGINT)
 
 
+def render_welcome():
+    f = Figlet(font='slant')
+    print(f.renderText('ESAT - AC'))
+    print("Echo Speech Analysis Toolkit - Automatic Capture, Version {}".format(config.version))
+
+
 def main():
+    render_welcome()
     generate_stop_aws_polly("Vicki", "neural")  # vicki only because the "alexa stop" command is not captured
 
     # Generate voices for each query in the voice_commands.csv
