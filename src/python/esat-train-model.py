@@ -1,4 +1,10 @@
 __author__ = "Stefan Klapf"
+"""
+------------------------------------------------------------------------------------------------------------------------
+esat-train-model.py
+Trains the random forest models and generate some basic reports, confusion matrices, boxplots, etc...
+------------------------------------------------------------------------------------------------------------------------
+"""
 
 import argparse
 import datetime
@@ -46,11 +52,11 @@ def render_welcome():
 
 
 def write_data_to_disk(data, path):
-    """Saves serialized data to disk.
-            :param data: The Object which is saved to disk.
-            :param path full path for the file to write
-            :return: None
-        """
+    """ Saves serialized data to disk.
+        :param data: The Object which is saved to disk.
+        :param path full path for the file to write
+        :return: None
+    """
     try:
         with open(path, "wb") as f:
             pickle.dump(data, f)
@@ -61,6 +67,10 @@ def write_data_to_disk(data, path):
 
 
 def read_data_from_disk(path):
+    """ Reads serialized data from disk.
+        :param path full path for the file to read
+        :return: the read data
+    """
     try:
         with open(path, "rb") as f:
             data = pickle.load(f)
@@ -71,6 +81,11 @@ def read_data_from_disk(path):
 
 
 def generate_model(data_frames, m_name):
+    """Generates the random forest model and accompanying reports, matrices.
+        :data_frames a pandas datafram that contains all preprocessed training data [feature1, feature2,...,class label]
+        :m_name the name of the model, used for the filename of the reports etc.
+        :return: none
+    """
     print("Starting to generate model: {}".format(m_name))
     start = time.time()
     plot_name = m_name.replace('_', '-')
@@ -85,7 +100,6 @@ def generate_model(data_frames, m_name):
      """
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
     model = RandomForestClassifier(n_estimators=500, n_jobs=-1)
-
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
 
@@ -140,10 +154,19 @@ def generate_model(data_frames, m_name):
     return model
 
 
-def create_feature_importance_plot(data, plot_name='feature-importance', fig_size_x=19, fig_size_y=15,
+def create_feature_importance_plot(df, plot_name='feature-importance', fig_size_x=19, fig_size_y=15,
                                    plot_title='Visualization of feature importance per tcptrace feature'):
+    """ Visualize a dataframe as a plot (Feature importance)
+        Parameters
+        ----------
+        df : Pandas dataframe
+        plot_name: name of the plot (filename)
+        fig_size_x : int
+        fig_size_y : int
+        plot_title : str
+    """
     plt.figure(figsize=(fig_size_x, fig_size_y))
-    sn.barplot(x='Feature_Importance', y='Variable', data=data, color='#494949')  # horizontal
+    sn.barplot(x='Feature_Importance', y='Variable', data=df, color='#494949')  # horizontal
     plt.tick_params(labelsize=13)
     plt.ylabel('Tcptrace Feature')
     plt.xlabel('Feature_Importance', fontsize=20)
@@ -152,6 +175,13 @@ def create_feature_importance_plot(data, plot_name='feature-importance', fig_siz
 
 
 def create_confusion_matrix_image(matrix, model_name, class_labels):
+    """ Visualize a matrix and saves in to the file system
+        Parameters
+        ----------
+        matrix : array with values
+        model_name: name of model
+        class_labels : str
+    """
     if 'speaker' in model_name:
         matrix = matrix.astype('float') / matrix.sum(axis=1)[:, np.newaxis]  # normalize the absolut values to 0.0 - 1.0
         plt.figure(figsize=(16, 7))
@@ -179,7 +209,11 @@ def create_confusion_matrix_image(matrix, model_name, class_labels):
 
 def get_features_from_pcap(pcap_path, classification, features):
     """ Uses tcptrace to extract the features. Returns a pandas dataframe with the features
-    https://linux.die.net/man/1/tcptrace
+        https://linux.die.net/man/1/tcptrace
+        :pcap_path Path to the pcap that gets analyzed
+        :classification The class label
+        :features A list of TCP features that are used for the training.
+        :return Pandas dataframe with the features
     """
     try:
         tcp_comm = subprocess.Popen(
@@ -207,8 +241,10 @@ def get_features_from_pcap(pcap_path, classification, features):
 
 
 def process_pcaps(features, classification):
-    """
-    Iterates over all folders in the trainings-data dir and extracts the wanted feature set.
+    """ Iterates over all folders in the trainings-data dir and extracts the wanted feature set.
+        :features A list of TCP features that are used for the training.
+        :classification The classification identifier, used to distinguish between models.
+        :return A list with all extracted features with the corresponding class label.
     """
     all_dataframes = []
     print("-" * 123)
@@ -236,6 +272,12 @@ def process_pcaps(features, classification):
 
 
 def process_model(model_name, features, classification):
+    """ Processes a single random forest model and saves the obtained model to the filesystem.
+        :model_name name of the model that is being processed
+        :features A list of TCP features that are used for the training.
+        :classification The classification identifier, used to distinguish between models.
+        :return none
+    """
     try:
         model_path = MODEL_DIR + model_name + ".pkl"
         pcap_data_path = MODEL_DIR + "pcap_data_" + model_name + ".pkl"
@@ -254,7 +296,8 @@ def process_model(model_name, features, classification):
 
 
 def process_all_models():
-    """ generate all 9 models needed for the classification
+    """ Generate all 9 models needed for the classification
+    :return none
     """
     process_model("model_id_all", config.FEATURES_ALL, "ID")
     process_model("model_id_a", config.FEATURES_A_ONLY, "ID")
@@ -270,6 +313,10 @@ def process_all_models():
 
 
 def check_filesize_of_captures(move_outliers=False):
+    """ Iterates over all captured samples and calculates the IQR distance per class label.
+        Moves outlier to an extra folder. Generates numerous additional box plot visualisations for the samples.
+        :return none
+    """
     list_filesize = []
     for directory in os.listdir(TRAINING_DATA_DIR):
         file_list = os.listdir(TRAINING_DATA_DIR + directory)
@@ -332,7 +379,10 @@ def check_filesize_of_captures(move_outliers=False):
 
 
 def move_outlier_samples_to_folder(df, target_dir):
-    df = pandas.read_csv('./outliers.csv')  # Hack to get the correct columns? FIXME
+    """ Moves the outliers to a seperate folder
+        :return none
+    """
+    df = pandas.read_csv('./outliers.csv')  # Hack to get the correct columns, passing the df directly didnt work FIXME
     i = 1
     while i <= 50:  # FIXME create all 50 subfolders, find a cleaner way!
         os.makedirs(os.path.dirname("{}{}/".format(target_dir, i)), exist_ok=True)
@@ -344,14 +394,14 @@ def move_outlier_samples_to_folder(df, target_dir):
 
 def plot_histogram_24h(df, plot_name, column_name='Datetime', color='#494949', title=''):
     """
-    Visualize a dataframe as a histogram
-    Parameters
-    ----------
-    df : Pandas dataframe
-    plot_name: name of the plot (filename)
-    column_name : str Column to visualize
-    color : str
-    title : str
+        Visualize a dataframe as a histogram
+        Parameters
+        ----------
+        df : Pandas dataframe
+        plot_name: name of the plot (filename)
+        column_name : str Column to visualize
+        color : str
+        title : str
     """
     plt.figure(figsize=(20, 10))
     ax = (df[column_name].groupby(df[column_name].dt.hour).count()).plot(kind="bar", color=color)
@@ -363,6 +413,16 @@ def plot_histogram_24h(df, plot_name, column_name='Datetime', color='#494949', t
 
 
 def plot_histogram_captures_per_days(df, plot_name, column_name='Datetime', color='#494949', title=''):
+    """
+       Visualize a dataframe as a histogram
+       Parameters
+       ----------
+       df : Pandas dataframe
+       plot_name: name of the plot (filename)
+       column_name : str Column to visualize
+       color : str
+       title : str
+    """
     plt.figure(figsize=(20, 10))
     ax = (df[column_name].groupby(df[column_name].dt.day).count()).plot(kind="bar", color=color)
     ax.set_facecolor('#eeeeee')
@@ -372,16 +432,29 @@ def plot_histogram_captures_per_days(df, plot_name, column_name='Datetime', colo
     plt.savefig("{}{}.png".format(REPORT_DIR, plot_name))
 
 
-def plot_filesize(data, plot_name='filesize_plot', fig_size_x=16, fig_size_y=7,
+def plot_filesize(df, plot_name='filesize_plot', fig_size_x=16, fig_size_y=7,
                   plot_title='Box plot visualization of sample filesize'):
+    """
+       Visualize a dataframe as a boxplot
+       Parameters
+       ----------
+       df : Pandas dataframe
+       plot_name: name of the plot (filename)
+       fig_size_x : int
+       fig_size_y : int
+       plot_title : str
+       """
     plt.figure(figsize=(fig_size_x, fig_size_y))
-    sn.boxplot(x='ID', y='Filesize', data=data)
+    sn.boxplot(x='ID', y='Filesize', data=df)
     plt.ylabel('Filesize in KB')
     plt.title(plot_title, fontsize=20)
     plt.savefig("{}{}.png".format(REPORT_DIR, plot_name))
 
 
 def get_iqr_values_from_dataframe(df_in, col_name):
+    """ Calculates the IQR distance for the provided df
+        :return median, q1,q3,iqr,minimum,maximum
+        """
     median = df_in[col_name].median()
     q1 = df_in[col_name].quantile(0.25)  # first quarter
     q3 = df_in[col_name].quantile(0.75)  # third quarter
@@ -392,6 +465,9 @@ def get_iqr_values_from_dataframe(df_in, col_name):
 
 
 def remove_outliers_from_dataframe(df_in, col_name):
+    """ Removes the outliers from the given dataframe
+        :return dataframe without outliers
+        """
     _, _, _, _, minimum, maximum = get_iqr_values_from_dataframe(df_in, col_name)
     df_out = df_in.loc[(df_in[col_name] > minimum) & (df_in[col_name] < maximum)]
     return df_out
@@ -404,7 +480,7 @@ def main():
 
     try:
         print("Started training on: " + str(datetime.datetime.now()))
-        # check_filesize_of_captures(False)
+        # check_filesize_of_captures(False) #enable to check for outliers
         process_all_models()
         print("All models successfully trained and saved to disk.")
         print("Finished training on: " + str(datetime.datetime.now()))
