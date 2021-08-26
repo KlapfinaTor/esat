@@ -5,7 +5,8 @@ from sklearn.metrics import accuracy_score
 """
 ------------------------------------------------------------------------------------------------------------------------
 esat-validate-helper.py
-Allows additional reports and matrices to be generated from the trained models.
+Allows additional reports and matrices to be generated from the trained models. Also conducts additional sample amount 
+analysis.
 ------------------------------------------------------------------------------------------------------------------------
 """
 import datetime
@@ -60,6 +61,15 @@ def write_data_to_disk(data, path):
 
 
 def create_plot(data, plot_name='samples-report', fig_size_x=19, fig_size_y=15, plot_title='Title'):
+    """ Visualize a dataframe as a plot (Feature importance)
+       Parameters
+       ----------
+       data : Pandas dataframe
+       plot_name: name of the plot (filename)
+       fig_size_x : int
+       fig_size_y : int
+       plot_title : str
+    """
     plt.figure(figsize=(fig_size_x, fig_size_y))
 
     if plot_name.split("-")[2] == "id":
@@ -107,6 +117,12 @@ def create_plot(data, plot_name='samples-report', fig_size_x=19, fig_size_y=15, 
 
 
 def generate_model(data_frames, samples_per_class, model_name):
+    """Generates the random forest model and accompanying reports, matrices.
+        :data_frames a pandas dataframe that contains all preprocessed training data [feature1, feature2,...,class label]
+        :m_name the name of the model, used for the filename of the reports etc.
+        :return: none
+    """
+
     start = time.time()
     df = pandas.concat(data_frames)
     df = df.groupby('class').head(samples_per_class).reset_index(drop=True)

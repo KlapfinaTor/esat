@@ -82,7 +82,7 @@ def read_data_from_disk(path):
 
 def generate_model(data_frames, m_name):
     """Generates the random forest model and accompanying reports, matrices.
-        :data_frames a pandas datafram that contains all preprocessed training data [feature1, feature2,...,class label]
+        :data_frames a pandas dataframe that contains all preprocessed training data [feature1, feature2,...,class label]
         :m_name the name of the model, used for the filename of the reports etc.
         :return: none
     """
