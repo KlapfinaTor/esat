@@ -1,6 +1,7 @@
 # Echo Speech Analysis Toolkit (ESAT)
 
 - Author: Stefan Klapf
+- Developed for my Master Thesis at the FH-Joanneum in 2021.
 
 ## Idea Overview
 
@@ -9,6 +10,8 @@ with an Amazon Alexa System and interception of the resulting network traffic. I
 training and classification of the gathered network data. From the captured network traffic, TCP features are extracted,
 which are used to train 9 different random forest models. The primary aim of the solution was to automate the capture
 and training process for the gathered network data.
+
+![Architecture Overview](./docs/solution-details.png  "Architecture Overview")
 
 ## Toolkit Feature Overview:
 
